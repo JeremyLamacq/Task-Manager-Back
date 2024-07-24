@@ -26,24 +26,35 @@ public class TestApi {
             serverManager.init(8080);
             serverManager.start();
 
-        } finally {
-            DatabaseManager.close();
-        }
+        // Ajouter un hook pour fermer la connexion proprement quand le serveur s'arrête
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                serverManager.stop(0);
+                DatabaseManager.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
+        
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
     }
 
     public static void createData(String description) throws SQLException {
-        System.out.println("Creating data...");
-        int rowsInserted;
+        System.out.println("Creating data with description: " + description);
         try (Connection connection = DatabaseManager.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO notes (description) VALUES (?)")) {
+            String sql = "INSERT INTO notes (description) VALUES (?)";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, description);
-                rowsInserted = statement.executeUpdate();
-                System.out.println("Rows inserted: " + rowsInserted);
-            } catch (SQLException e) {
-                System.err.println("SQL Exception: " + e.getMessage());
-                throw e;
+                int rowsInserted = statement.executeUpdate();
+                System.out.println("Rows affected: " + rowsInserted);
+                // statement.close();
+
             }
+        } catch (SQLException e) {
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
         }
     }
 
