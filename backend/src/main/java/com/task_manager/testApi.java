@@ -19,8 +19,6 @@ public class TestApi {
         try {
             DatabaseManager.init();
             readData();
-            createData("trop tard");
-            readData();
 
             // Initialiser et démarrer le serveur HTTP sur le port 8080
             serverManager.init(8080);
@@ -39,6 +37,23 @@ public class TestApi {
     } catch (SQLException e) {
         e.printStackTrace();
     }
+    }
+
+    public static void updateData(String description, int id) throws SQLException {
+        System.out.println("Updating data with id: " + id);
+        try (Connection connection = DatabaseManager.getConnection()) {
+            String sql = "UPDATE notes SET description = (?) WHERE id = (?) ";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, description);
+                statement.setInt(2, id);
+                int rowsInserted = statement.executeUpdate();
+                System.out.println("Rows affected: " + rowsInserted);
+
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
+        }
     }
 
     public static void createData(String description) throws SQLException {

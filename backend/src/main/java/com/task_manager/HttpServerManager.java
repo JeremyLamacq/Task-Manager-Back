@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -25,6 +27,7 @@ public class HttpServerManager {
         server.createContext("/api/home", new HomeHandler());
         server.createContext("/api/goodbye", new GoodbyeHandler());
         server.createContext("/api/create", new CreateHandler());
+        server.createContext("/api/update/", new UpdateHandler());
 
         // Configurer un exécuteur par défaut
         server.setExecutor(null);
@@ -111,7 +114,7 @@ public class HttpServerManager {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     description = jsonObject.get("description").getAsString();
                     System.out.println(description); // Console log to check received value
-                } catch (Exception e) {
+                } catch (JsonSyntaxException e) {
                     e.printStackTrace();
                 }
 
@@ -134,6 +137,70 @@ public class HttpServerManager {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
             }
         }
+    }
+
+    // Gestionnaire des requêtes Update
+    static class UpdateHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            setCorsHeaders(exchange);
+
+            if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                // Répondre aux requêtes OPTIONS CORS
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
+            if ("PUT".equals(exchange.getRequestMethod())) {
+                URI requestUri = exchange.getRequestURI();
+                String path = requestUri.getPath();
+                String[] segments = path.split("/");
+                if (segments.length != 4) { // /api/update/{id}
+                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                    return;
+                }
+
+                int id;
+                try {
+                    id = Integer.parseInt(segments[3]);
+                } catch (NumberFormatException e) {
+                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                    return;
+                }
+
+                InputStream requestBodyStream = exchange.getRequestBody();
+                String requestBody = new String(requestBodyStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                String description = "";
+                try {
+                    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                    description = jsonObject.get("description").getAsString();
+                    id = jsonObject.get("id").getAsInt();
+                    System.out.println(description); // Console log to check received value
+                } catch (JsonSyntaxException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    TestApi.updateData(description, id);
+                    String response = "Note created";
+                    exchange.sendResponseHeaders(200, response.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    String response = "Failed to create note";
+                    exchange.sendResponseHeaders(500, response.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+            }
+        }
+
     }
 
     // Ajouter les en-têtes CORS
