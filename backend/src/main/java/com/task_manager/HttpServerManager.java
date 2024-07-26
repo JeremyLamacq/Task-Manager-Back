@@ -28,6 +28,7 @@ public class HttpServerManager {
         server.createContext("/api/goodbye", new GoodbyeHandler());
         server.createContext("/api/create", new CreateHandler());
         server.createContext("/api/update/", new UpdateHandler());
+        server.createContext("/api/delete/", new DeleteHandler());
 
         // Configurer un exécuteur par défaut
         server.setExecutor(null);
@@ -183,14 +184,69 @@ public class HttpServerManager {
 
                 try {
                     TestApi.updateData(description, id);
-                    String response = "Note created";
+                    String response = "Note updated";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(response.getBytes());
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
-                    String response = "Failed to create note";
+                    String response = "Failed to update note";
+                    exchange.sendResponseHeaders(500, response.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+            }
+        }
+
+    }
+
+    // Gestionnaire des requêtes Update
+    static class DeleteHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            System.out.println("Received request: " + exchange.getRequestMethod() + " " + exchange.getRequestURI());
+            setCorsHeaders(exchange);
+
+            if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                // Répondre aux requêtes OPTIONS CORS
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
+            if ("DELETE".equals(exchange.getRequestMethod())) {
+                URI requestUri = exchange.getRequestURI();
+                String path = requestUri.getPath();
+                String[] segments = path.split("/");
+                if (segments.length != 4) { // /api/delete/{id}
+                    System.out.println("Bad request: Incorrect URL segments");
+                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                    return;
+                }
+
+                int id;
+                try {
+                    id = Integer.parseInt(segments[3]);
+                    System.out.println("Parsed ID: " + id);
+                } catch (NumberFormatException e) {
+                    System.out.println("Bad request: ID not a number");
+                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                    return;
+                }
+
+                try {
+                    TestApi.deleteData(id);
+                    String response = "Note deleted";
+                    exchange.sendResponseHeaders(200, response.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    String response = "Failed to delete note";
                     exchange.sendResponseHeaders(500, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(response.getBytes());

@@ -39,6 +39,22 @@ public class TestApi {
     }
     }
 
+    public static void deleteData(int id) throws SQLException {
+        System.out.println("Deleting data with id: " + id);
+        try (Connection connection = DatabaseManager.getConnection()) {
+            String sql = "DELETE FROM notes WHERE id = (?) ";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, id);
+                int rowsInserted = statement.executeUpdate();
+                System.out.println("Rows affected: " + rowsInserted);
+
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
+        }
+    }
+
     public static void updateData(String description, int id) throws SQLException {
         System.out.println("Updating data with id: " + id);
         try (Connection connection = DatabaseManager.getConnection()) {
