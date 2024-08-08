@@ -26,7 +26,7 @@ public class Main {
             readData();
 
             // Initialiser et démarrer le serveur HTTP sur le port 8080
-            serverManager.init(8080);
+            serverManager.init(5432);
             serverManager.start();
 
             // Ajouter un hook pour fermer la connexion proprement quand le serveur s'arrête
