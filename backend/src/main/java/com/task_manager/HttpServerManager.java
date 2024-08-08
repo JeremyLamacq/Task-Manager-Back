@@ -1,7 +1,6 @@
 package com.task_manager;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -19,11 +18,9 @@ public class HttpServerManager {
 
     private HttpServer server;
 
-    // Initialiser le serveur HTTP
     public void init(int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
 
-        // Définir les gestionnaires pour différents chemins
         server.createContext("/api/home", new HomeHandler());
         server.createContext("/api/goodbye", new GoodbyeHandler());
         server.createContext("/api/create", new CreateHandler());
@@ -34,7 +31,6 @@ public class HttpServerManager {
         server.setExecutor(null);
     }
 
-    // Démarrer le serveur
     public void start() {
         if (server != null) {
             server.start();
@@ -44,7 +40,6 @@ public class HttpServerManager {
         }
     }
 
-    // Arrêter le serveur
     public void stop(int delay) {
         if (server != null) {
             server.stop(delay);
@@ -53,35 +48,31 @@ public class HttpServerManager {
         }
     }
 
-    // Gestionnaire des requêtes Home
     static class HomeHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             setCorsHeaders(exchange);
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                // Répondre aux requêtes OPTIONS CORS
                 exchange.sendResponseHeaders(204, -1);
                 return;
             }
 
-            // Lire les données de la base de données
             try {
-                TestApi.readData();
+                Main.readData();
             } catch (SQLException e) {
-                e.printStackTrace();
+                sendErrorResponse(exchange, "Database read error");
+                return;
             }
-            // Définir l'en-tête Content-Type pour JSON
             exchange.getResponseHeaders().set("Content-Type", "application/json");
 
-            // Envoyer la réponse
-            exchange.sendResponseHeaders(200, TestApi.resultData.getBytes().length);
+            byte[] response = Main.resultData.getBytes();
+            exchange.sendResponseHeaders(200, response.length);
             try (OutputStream os = exchange.getResponseBody()) {
-                os.write(TestApi.resultData.getBytes());
+                os.write(response);
             }
         }
     }
 
-    // Gestionnaire des requêtes Goodbye
     static class GoodbyeHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -94,45 +85,31 @@ public class HttpServerManager {
         }
     }
 
-    // Gestionnaire des requêtes Create
     static class CreateHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             setCorsHeaders(exchange);
 
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                // Répondre aux requêtes OPTIONS CORS
                 exchange.sendResponseHeaders(204, -1);
                 return;
             }
 
             if ("POST".equals(exchange.getRequestMethod())) {
-                InputStream requestBodyStream = exchange.getRequestBody();
-                String requestBody = new String(requestBodyStream.readAllBytes(), StandardCharsets.UTF_8);
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
 
-                String description = "";
                 try {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
-                    description = jsonObject.get("description").getAsString();
-                    System.out.println(description); // Console log to check received value
-                } catch (JsonSyntaxException e) {
-                    e.printStackTrace();
-                }
+                    String description = jsonObject.get("description").getAsString();
 
-                try {
-                    TestApi.createData(description);
+                    Main.createData(description);
                     String response = "Note created";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(response.getBytes());
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    String response = "Failed to create note";
-                    exchange.sendResponseHeaders(500, response.length());
-                    try (OutputStream os = exchange.getResponseBody()) {
-                        os.write(response.getBytes());
-                    }
+                } catch (JsonSyntaxException | SQLException e) {
+                    sendErrorResponse(exchange, "Failed to create note");
                 }
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
@@ -140,14 +117,12 @@ public class HttpServerManager {
         }
     }
 
-    // Gestionnaire des requêtes Update
     static class UpdateHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             setCorsHeaders(exchange);
 
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                // Répondre aux requêtes OPTIONS CORS
                 exchange.sendResponseHeaders(204, -1);
                 return;
             }
@@ -156,63 +131,47 @@ public class HttpServerManager {
                 URI requestUri = exchange.getRequestURI();
                 String path = requestUri.getPath();
                 String[] segments = path.split("/");
-                if (segments.length != 4) { // /api/update/{id}
-                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                if (segments.length != 4) {
+                    exchange.sendResponseHeaders(400, -1);
                     return;
                 }
 
-                int id;
+                int id = 0;
                 try {
                     id = Integer.parseInt(segments[3]);
                 } catch (NumberFormatException e) {
-                    exchange.sendResponseHeaders(400, -1); // Bad Request
-                    return;
+                    exchange.sendResponseHeaders(400, -1);
                 }
 
-                InputStream requestBodyStream = exchange.getRequestBody();
-                String requestBody = new String(requestBodyStream.readAllBytes(), StandardCharsets.UTF_8);
+                String requestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
 
-                String description = "";
                 try {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
-                    description = jsonObject.get("description").getAsString();
-                    id = jsonObject.get("id").getAsInt();
-                    System.out.println(description); // Console log to check received value
-                } catch (JsonSyntaxException e) {
-                    e.printStackTrace();
-                }
+                    String description = jsonObject.get("description").getAsString();
 
-                try {
-                    TestApi.updateData(description, id);
+                    Main.updateData(description, id);
+
                     String response = "Note updated";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(response.getBytes());
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    String response = "Failed to update note";
-                    exchange.sendResponseHeaders(500, response.length());
-                    try (OutputStream os = exchange.getResponseBody()) {
-                        os.write(response.getBytes());
-                    }
+                } catch (JsonSyntaxException | SQLException e) {
+                    sendErrorResponse(exchange, "Failed to update note");
                 }
             } else {
-                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+                exchange.sendResponseHeaders(405, -1);
             }
         }
 
     }
 
-    // Gestionnaire des requêtes Update
     static class DeleteHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            System.out.println("Received request: " + exchange.getRequestMethod() + " " + exchange.getRequestURI());
             setCorsHeaders(exchange);
 
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                // Répondre aux requêtes OPTIONS CORS
                 exchange.sendResponseHeaders(204, -1);
                 return;
             }
@@ -221,48 +180,47 @@ public class HttpServerManager {
                 URI requestUri = exchange.getRequestURI();
                 String path = requestUri.getPath();
                 String[] segments = path.split("/");
-                if (segments.length != 4) { // /api/delete/{id}
-                    System.out.println("Bad request: Incorrect URL segments");
-                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                if (segments.length != 4) {
+                    exchange.sendResponseHeaders(400, -1);
                     return;
                 }
 
                 int id;
                 try {
                     id = Integer.parseInt(segments[3]);
-                    System.out.println("Parsed ID: " + id);
                 } catch (NumberFormatException e) {
-                    System.out.println("Bad request: ID not a number");
-                    exchange.sendResponseHeaders(400, -1); // Bad Request
+                    exchange.sendResponseHeaders(400, -1);
                     return;
                 }
 
                 try {
-                    TestApi.deleteData(id);
+                    Main.deleteData(id);
                     String response = "Note deleted";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
                         os.write(response.getBytes());
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
-                    String response = "Failed to delete note";
-                    exchange.sendResponseHeaders(500, response.length());
-                    try (OutputStream os = exchange.getResponseBody()) {
-                        os.write(response.getBytes());
-                    }
+                    sendErrorResponse(exchange, "Failed to delete note");
                 }
             } else {
-                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+                exchange.sendResponseHeaders(405, -1);
             }
         }
 
     }
 
-    // Ajouter les en-têtes CORS
     private static void setCorsHeaders(HttpExchange exchange) {
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "https://task-manager-one-orcin.vercel.app");
         exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+    }
+
+    private static void sendErrorResponse(HttpExchange exchange, String message) throws IOException {
+        String response = message;
+        exchange.sendResponseHeaders(500, response.length());
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+        }
     }
 }
