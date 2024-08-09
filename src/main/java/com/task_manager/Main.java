@@ -25,7 +25,7 @@ public class Main {
             DatabaseManager.init();
             readData();
 
-            // Initialiser et démarrer le serveur HTTP sur le port 8080
+            // Initialiser et démarrer le serveur HTTP sur le port 5432
             serverManager.init(5432);
             serverManager.start();
 
