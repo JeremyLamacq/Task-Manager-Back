@@ -58,14 +58,14 @@ public class HttpServerManager {
             }
 
             try {
-                Main.readData();
+                App.readData();
             } catch (SQLException e) {
                 sendErrorResponse(exchange, "Database read error");
                 return;
             }
             exchange.getResponseHeaders().set("Content-Type", "application/json");
 
-            byte[] response = Main.resultData.getBytes();
+            byte[] response = App.resultData.getBytes();
             exchange.sendResponseHeaders(200, response.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(response);
@@ -102,7 +102,7 @@ public class HttpServerManager {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String description = jsonObject.get("description").getAsString();
 
-                    Main.createData(description);
+                    App.createData(description);
                     String response = "Note created";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {
@@ -149,7 +149,7 @@ public class HttpServerManager {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String description = jsonObject.get("description").getAsString();
 
-                    Main.updateData(description, id);
+                    App.updateData(description, id);
 
                     String response = "Note updated";
                     exchange.sendResponseHeaders(200, response.length());
@@ -194,7 +194,7 @@ public class HttpServerManager {
                 }
 
                 try {
-                    Main.deleteData(id);
+                    App.deleteData(id);
                     String response = "Note deleted";
                     exchange.sendResponseHeaders(200, response.length());
                     try (OutputStream os = exchange.getResponseBody()) {

@@ -1,9 +1,0 @@
-{
-    "java.jdt.ls.java.home": "C:\\Program Files\\OpenJDK-22",
-    "java.project.sourcePaths": [
-        "src/main/java"
-    ],
-    "java.project.outputPath": "target/classes",
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "java.import.generatesMetadataFilesAtProjectRoot": false
-}
