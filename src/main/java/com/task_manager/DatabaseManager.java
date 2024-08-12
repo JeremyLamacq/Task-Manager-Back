@@ -2,21 +2,19 @@ package com.task_manager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Objects;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import io.github.cdimascio.dotenv.Dotenv;
 
 public class DatabaseManager {
 
     private static HikariDataSource dataSource;
 
     public static void init() {
-        Dotenv dotenv = Dotenv.load();
+        // Dotenv dotenv = Dotenv.load();
 
-        String url = dotenv.get("DB_URL");
+        String url = System.getenv("DATABASE_URL");
+        // String url = dotenv.get("DB_URL");
         // String username = dotenv.get("DB_USERNAME");
         // String password = dotenv.get("DB_PASSWORD");
 

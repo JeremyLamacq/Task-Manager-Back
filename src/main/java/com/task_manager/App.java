@@ -22,12 +22,15 @@ public class App {
     public static void main(String[] args) throws IOException, SQLException {
         System.out.println("Application started!");
         HttpServerManager serverManager = new HttpServerManager();
+
         try {
             DatabaseManager.init();
             readData();
 
+            int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+
             // Initialiser et démarrer le serveur HTTP sur le port 8080
-            serverManager.init(8080);
+            serverManager.init(port);
             serverManager.start();
 
             // Ajouter un hook pour fermer la connexion proprement quand le serveur s'arrête
