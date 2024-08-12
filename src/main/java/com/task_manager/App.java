@@ -27,11 +27,10 @@ public class App {
             DatabaseManager.init();
             readData();
 
-            int port = Integer.parseInt(System.getenv("PORT"));
-            Server server = new Server(port);
+            // int port = Integer.parseInt(System.getenv("PORT"));
 
             // Initialiser et démarrer le serveur HTTP sur le port 8080
-            serverManager.init(port);
+            serverManager.init(8080);
             serverManager.start();
 
             // Ajouter un hook pour fermer la connexion proprement quand le serveur s'arrête
