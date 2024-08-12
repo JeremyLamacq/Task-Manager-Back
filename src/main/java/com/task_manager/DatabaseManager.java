@@ -17,19 +17,23 @@ public class DatabaseManager {
         Dotenv dotenv = Dotenv.load();
 
         String url = dotenv.get("DB_URL");
-        String username = dotenv.get("DB_USERNAME");
-        String password = dotenv.get("DB_PASSWORD");
+        // String username = dotenv.get("DB_USERNAME");
+        // String password = dotenv.get("DB_PASSWORD");
 
-        if (Objects.isNull(url) || url.isEmpty() ||
-                Objects.isNull(username) || username.isEmpty() ||
-                Objects.isNull(password) || password.isEmpty()) {
-            throw new IllegalStateException("Database credentials are missing or invalid");
+        // if (Objects.isNull(url) || url.isEmpty() ||
+        //         Objects.isNull(username) || username.isEmpty() ||
+        //         Objects.isNull(password) || password.isEmpty()) {
+        //     throw new IllegalStateException("Database credentials are missing or invalid");
+        // }
+        if (url == null || url.isEmpty()) {
+            System.err.println("La variable d'environnement DB_URL n'est pas définie.");
+            return;
         }
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
-        config.setUsername(username);
-        config.setPassword(password);
+        // config.setUsername(username);
+        // config.setPassword(password);
 
         config.setMaximumPoolSize(20);
         config.setConnectionTimeout(30000);
