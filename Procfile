@@ -1,1 +1,0 @@
-web: java -jar target/Task-Manager-Back-1.0-SNAPSHOT.jar
