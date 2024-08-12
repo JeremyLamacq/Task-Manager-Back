@@ -27,7 +27,8 @@ public class App {
             DatabaseManager.init();
             readData();
 
-            int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+            int port = Integer.parseInt(System.getenv("PORT"));
+            Server server = new Server(port);
 
             // Initialiser et démarrer le serveur HTTP sur le port 8080
             serverManager.init(port);
