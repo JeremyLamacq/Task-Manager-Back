@@ -1,0 +1,1 @@
+web: java -jar Task-Manager-Back-1.0-SNAPSHOT-jar-with-dependencies.jar
