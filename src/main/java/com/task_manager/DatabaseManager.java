@@ -24,7 +24,7 @@ public class DatabaseManager {
         //     throw new IllegalStateException("Database credentials are missing or invalid");
         // }
         if (url == null || url.isEmpty()) {
-            System.err.println("La variable d'environnement DB_URL n'est pas définie.");
+            System.err.println("La variable d'environnement DB_URL ou DATABASE_URL n'est pas définie.");
             return;
         }
 
