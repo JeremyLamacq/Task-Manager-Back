@@ -1,8 +1,4 @@
-com\task_manager\HttpServerManager$CreateHandler.class
-com\task_manager\HttpServerManager$GoodbyeHandler.class
+com\task_manager\model\Note.class
+com\task_manager\repository\NoteRepository.class
 com\task_manager\App.class
-com\task_manager\HttpServerManager$HomeHandler.class
-com\task_manager\DatabaseManager.class
-com\task_manager\HttpServerManager$UpdateHandler.class
-com\task_manager\HttpServerManager.class
-com\task_manager\HttpServerManager$DeleteHandler.class
+com\task_manager\controller\NoteController.class
