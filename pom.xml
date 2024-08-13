@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.task_manager</groupId>
-	<artifactId>spring-boot-starter-web</artifactId>
+	<artifactId>task-manager-back</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Task-Manager-Back</name>
 	<description>Project for Spring Boot</description>
