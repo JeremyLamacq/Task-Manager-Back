@@ -14,30 +14,30 @@ import java.util.List;
 public class NoteController {
 
     @Autowired
-    private NoteRepository noteRepository;
+    private NoteRepository NoteRepository;
 
     @GetMapping("/home")
     public List<Note> getAllNotes() {
-        return noteRepository.findAll();
+        return NoteRepository.findAll();
     }
 
     @PostMapping("/create")
     public Note createNote(@RequestBody Note note) {
-        return noteRepository.save(note);
+        return NoteRepository.save(note);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Note> updateNote(@PathVariable int id, @RequestBody Note noteDetails) {
-        Note note = noteRepository.findById(id).orElseThrow(() -> new RuntimeException("Note not found"));
+    public ResponseEntity<Note> updateNote(@PathVariable Long id, @RequestBody Note noteDetails) {
+        Note note = NoteRepository.findById(id).orElseThrow(() -> new RuntimeException("Note not found"));
         note.setDescription(noteDetails.getDescription());
-        final Note updatedNote = noteRepository.save(note);
+        final Note updatedNote = NoteRepository.save(note);
         return ResponseEntity.ok(updatedNote);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteNote(@PathVariable int id) {
-        Note note = noteRepository.findById(id).orElseThrow(() -> new RuntimeException("Note not found"));
-        noteRepository.delete(note);
+    public ResponseEntity<Void> deleteNote(@PathVariable Long id) {
+        Note note = NoteRepository.findById(id).orElseThrow(() -> new RuntimeException("Note not found"));
+        NoteRepository.delete(note);
         return ResponseEntity.noContent().build();
     }
 }
